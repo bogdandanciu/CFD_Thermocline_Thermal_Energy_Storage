@@ -1,15 +1,49 @@
-# Makefile 
+CC=g++
+OBJ = main.o functions.o
+HEADER = include/functions.h
+CFLAGS = -c -Wall -O3 
+CPPFLAGS = -Iinclude 
+.PHONY: all clean
 
-CC = g++
-CFLAGS = -O3 -Wall 
+run_main: $(OBJ)
+	$(CC) $(OBJ) -o $@
 
-all: P1 
+main.o: src/main.cpp $(HEADER)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $< -o $@
 
-#P1: P1.o
-#	$(CC) -o $@ $@.o $(OBJECTS)  
+functions.o: src/functions.cpp $(HEADER)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $< -o $@
 
-P1: P1.cpp
-	$(CC) $(CFLAGS) P1.cpp -o P1
+clean:
+	rm *.o run_main
 
-clean: 
-	rm P1 example.txt simData.dat 
+clean_all:
+	rm simData.dat
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
