@@ -18,7 +18,7 @@ clean:
 	rm *.o run_main
 
 clean_all:
-	rm simData.dat
+	rm *.dat
 
 
 

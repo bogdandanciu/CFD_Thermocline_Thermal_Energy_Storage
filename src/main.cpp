@@ -9,7 +9,7 @@ int main()
     read_inputs(&inputs);
 
     //Write simulation data
-    write2file(inputs.N, inputs.Ti);
+    write_data(inputs.N, inputs.Ti);
 
 	return 0;
 }

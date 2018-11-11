@@ -31,6 +31,17 @@ void read_inputs(variables* inputs)
     cin  >> inputs->N;
     cout << "Please input the initial temperature: "; 
     cin  >> inputs->Ti; 
+
+    cout << "Please enter the duration of the charge state: ";
+    cin  >> inputs->t_charge;
+    cout << "Please enter the duration of the discharge state: ";
+    cin  >> inputs->t_discharge;
+    cout << "Please enter the duration of the idle state: ";
+    cin  >> inputs->t_idle;
+    cout << "Please enter the number of cycles";
+    cin  >> inputs->n_cycles;
+    cout << "Please enter the number of time steps";
+    cin  >> inputs->n_timeSteps;
 }
 
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
@@ -52,7 +63,7 @@ void read_inputs(variables* inputs)
 //
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 
-void write2file(const int N, double Ti)
+void write_data(const int N, double Ti)
 {
     ofstream simFile("simData.dat");
     if (simFile.is_open())
@@ -64,5 +75,33 @@ void write2file(const int N, double Ti)
         simFile.close();
     }
     else cout << "Unable to open file" << endl; 
+
 }
 
+//%%%FUNC%%%////////////////////////////////////////////////////////////////////
+// Function Name: write_state 
+//
+// Description:   This functions reads the inputs necessary to run the 
+//                simulation.
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+// Parameters:
+//   IN     : <None>
+//   OUT    : <None>
+//   RETURN : <None>
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+// Global Variables used:
+//
+//%%%FUNC%%%////////////////////////////////////////////////////////////////////
+
+void write_state(double t_charge, double t_discharge, double t_idle, const int n_cycles, const int n_timeSteps)
+{
+//    ofstrean stateFile("stateData.dat");
+//    if (stateFile.is_open())
+//    {
+//        stateFile 
+//    }
+}
