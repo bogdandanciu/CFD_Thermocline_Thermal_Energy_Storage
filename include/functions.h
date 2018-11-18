@@ -34,3 +34,9 @@ void write_data(const int N, double Ti);
 //Write state data
 void write_state(double t_charge, double t_discharge, double t_idle, const int n_cycles, const int n_timeSteps);
 
+//Discrete Equations
+void charging_equation
+
+void discharging_equation
+
+void idle_equation
