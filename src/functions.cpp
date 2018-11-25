@@ -203,7 +203,7 @@ void discharge_equation(variables *inputs,
 
 
 
-//LU decomposition 
+//*******LU decomposition 
 void luDecomposition(double A[][2], double b[][1], double x[2])
 {
     double lower[2][2], upper[2][2];
@@ -258,3 +258,21 @@ void luDecomposition(double A[][2], double b[][1], double x[2])
     x[1] = x2;
 
 }
+
+
+
+void solver(variables *inputs)
+{
+    int         state;
+    double      h       = inputs->H/inputs->N;
+    const float delta_t = inputs->delta_t;
+    double      t_total = inputs->t_charge + inputs->t_discharge + 2*inputs->t_idle;
+    double      alpha_f = inputs->k_f / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
+    double      alpha_s = inputs->k_s / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
+    double      h_v_f   = inputs->h_v / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
+    double      h_v_s   = inputs->h_v / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
+
+
+
+}
+
