@@ -117,7 +117,7 @@ void charging_equation(variables *inputs,
                        double T_old[][3], double T_new[][3])
 {
     //Boundary condition on the left 
-    T_new[0][0] = h;
+    T_new[0][0] = h; //grid spacing 
     T_new[0][1] = T_old[0][1] + alpha_s*(delta_t/(h*h)) * (T_old[1][1] - T_old[0][1]);
     T_new[0][2] = T_old[0][2] - inputs->u_f*(delta_T/h) * (T_old[0][2] - inputs->T_bcl) 
                               + alpha_f*(delta_t/(h*h)) * (T_old[1][2] - T_old[0][2]); 
@@ -135,7 +135,7 @@ void charging_equation(variables *inputs,
     //Boundary conditions on the right 
     T_new[inputs->N - 1][0] = inputs->N*h;
     T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s*(delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
-    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_f*(delta_T/h) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 2][2]) 
+    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_f*(delta_T/h) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]) 
                                                       + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]); 
 }
 
@@ -164,7 +164,7 @@ void idle_equation(variables *inputs,
     //Boundary conditions on the right 
     T_new[inputs->N - 1][0] = inputs->N*h;
     T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s*(delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
-    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] + alpha_f*(delta_T/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 2][2]) 
+    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] + alpha_f*(delta_T/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]) 
 }
 
 
@@ -197,16 +197,64 @@ void discharge_equation(variables *inputs,
     //Boundary conditions on the right 
     T_new[inputs->N - 1][0] = inputs->N*h;
     T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s*(delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
-    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_d*(delta_T/h) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 2][2]) 
-                                                            + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]); 
+    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_d*(delta_T/h) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]) 
+                                                      + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]); 
 }
 
 
 
+//LU decomposition 
+void luDecomposition(double A[][2], double b[][1], double x[2])
+{
+    double lower[2][2], upper[2][2];
+    double z1, z2, x1, x2;
 
+//    memset(lower, 0, size(lower));
+//    memset(upper, 0, size(upper));
+    
+    //Decomposition into Upper and Lower matrices 
+    for (int i = 0; i < 2; i++)
+    {
+        //Upper Triangular Matrix 
+        for (int k = i; k < 2; k++)
+        {
+            //Sum of L(i,j) * U(j,k)
+            double sum = 0;
+            for (int j = 0; j < i; j++) 
+            {
+                sum += (lower[i][j] * upper[j][k]);
 
+            }
+            //Evaluating upper matrix
+            upper[i][k] = A[i][k] - sum;
+        } 
+        //Lower Triangular Matrix 
+        for (int k = i; k < 2; k++)
+        {
+            if (i == k)
+            //Diagonal is equal to 1 
+                lower[i][i] = 1;   
+            else
+            {
+                //Sum of L(k,j) * U(j,i)
+                double sum = 0;
+                for (int j = 1; j < i; j++)
+                {
+                    sum += (lower[k][j] * upper[j][i]);
+                }       
+                //Evaluating L(k,i)
+                lower[k][i] = (A[k][i] - sum)/upper[i][i];
+            }
 
+        }
+    }
 
+    //Back substitution
+    z1 = b[0][0];
+    z2 = (b[1][0] - lower[1][0]*z1);
+    x2 = z2/upper[1][1];
+    x1 = (z1 - upper[0][1] * x2)/upper[0][0];
+    x[0] = x1;
+    x[1] = x2;
 
-
-
+}
