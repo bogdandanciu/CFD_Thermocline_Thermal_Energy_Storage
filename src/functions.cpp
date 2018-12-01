@@ -119,7 +119,7 @@ void charging_equation(variables *inputs,
     //Boundary condition on the left 
     T_new[0][0] = h; //grid spacing 
     T_new[0][1] = T_old[0][1] + alpha_s*(delta_t/(h*h)) * (T_old[1][1] - T_old[0][1]);
-    T_new[0][2] = T_old[0][2] - inputs->u_f*(delta_T/h) * (T_old[0][2] - inputs->T_bcl) 
+    T_new[0][2] = T_old[0][2] - inputs->u_f*(delta_t/h) * (T_old[0][2] - inputs->T_bcl) 
                               + alpha_f*(delta_t/(h*h)) * (T_old[1][2] - T_old[0][2]); 
 
 
@@ -128,14 +128,14 @@ void charging_equation(variables *inputs,
     {
         T_new[i][0] = (i+1)*h;
         T_new[i][1] = T_old[i][1] + alpha_s*(delta_t/(h*h)) * (T_old[i+1][1] - 2*T_old[i][1] + T_old[i-1][1]);
-        T_new[i][2] = T_old[i][2] - inputs->u_f*(delta_T/h) * (T_old[i+1][2] - T_old[i-1][2]) 
+        T_new[i][2] = T_old[i][2] - inputs->u_f*(delta_t/h) * (T_old[i+1][2] - T_old[i-1][2]) 
                                   + alpha_f*(delta_t/(h*h)) * (T_old[i+1][2] - 2*T_old[i][2] + T_old[i-1][2]); 
     }
 
     //Boundary conditions on the right 
     T_new[inputs->N - 1][0] = inputs->N*h;
     T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s*(delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
-    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_f*(delta_T/h) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]) 
+    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_f*(delta_t/h) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]) 
                                                       + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]); 
 }
 
@@ -150,7 +150,7 @@ void idle_equation(variables *inputs,
     //Boundary condition on the left 
     T_new[0][0] = h;
     T_new[0][1] = T_old[0][1] + alpha_s*(delta_t/(h*h)) * (T_old[1][1] - T_old[0][1]);
-    T_new[0][2] = T_old[0][2] - alpha_f*(delta_T/(h*h)) * (T_old[1][2] - T_old[0][2]) 
+    T_new[0][2] = T_old[0][2] - alpha_f*(delta_t/(h*h)) * (T_old[1][2] - T_old[0][2]);
 
 
     //Main body of computation 
@@ -164,7 +164,7 @@ void idle_equation(variables *inputs,
     //Boundary conditions on the right 
     T_new[inputs->N - 1][0] = inputs->N*h;
     T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s*(delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
-    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] + alpha_f*(delta_T/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]) 
+    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]);
 }
 
 
@@ -181,7 +181,7 @@ void discharge_equation(variables *inputs,
     //Boundary condition on the left 
     T_new[0][0] = h;
     T_new[0][1] = T_old[0][1] + alpha_s*(delta_t/(h*h)) * (T_old[1][1] - T_old[0][1]);
-    T_new[0][2] = T_old[0][2] - u_d*(delta_T/h) * (T_old[1][2] - T_old[0][2]) 
+    T_new[0][2] = T_old[0][2] - u_d*(delta_t/h) * (T_old[1][2] - T_old[0][2]) 
                               + alpha_f*(delta_t/(h*h)) * (T_old[1][2] - T_old[0][2]); 
 
 
@@ -190,14 +190,14 @@ void discharge_equation(variables *inputs,
     {
         T_new[i][0] = (i+1)*h;
         T_new[i][1] = T_old[i][1] + alpha_s*(delta_t/(h*h)) * (T_old[i+1][1] - 2*T_old[i][1] + T_old[i-1][1]);
-        T_new[i][2] = T_old[i][2] - u_d*(delta_T/h) * (T_old[i+1][2] - T_old[i][2]) 
+        T_new[i][2] = T_old[i][2] - u_d*(delta_t/h) * (T_old[i+1][2] - T_old[i][2]) 
                                   + alpha_f*(delta_t/(h*h)) * (T_old[i+1][2] - 2*T_old[i][2] + T_old[i-1][2]); 
     }
 
     //Boundary conditions on the right 
     T_new[inputs->N - 1][0] = inputs->N*h;
     T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s*(delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
-    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_d*(delta_T/h) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]) 
+    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_d*(delta_t/h) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]) 
                                                       + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]); 
 }
 
@@ -260,17 +260,38 @@ void luDecomposition(double A[][2], double b[][1], double x[2])
 }
 
 
+//******Order of verification study 
+//
+//*****Method of Manufactured solutions 
+double MMS(int n, double x, double L, int state)
+{
+    double k = (2*PI*n)/L;
 
+    if (state == 0) //fluid 
+    {
+        double T_sol_f = cos(k*x);
+
+        return T_sol_f;
+    }else if (state == 1) //solid
+    {
+        double T_sol_s = sin(k*x);
+
+        return T_sol_s;
+    }
+}
+
+
+//*********Solver
 void solver(variables *inputs)
 {
-    int         state;
-    double      h       = inputs->H/inputs->N;
-    const float delta_t = inputs->delta_t;
-    double      t_total = inputs->t_charge + inputs->t_discharge + 2*inputs->t_idle;
-    double      alpha_f = inputs->k_f / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
-    double      alpha_s = inputs->k_s / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
-    double      h_v_f   = inputs->h_v / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
-    double      h_v_s   = inputs->h_v / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
+//    int         state;
+//    double      h       = inputs->H/inputs->N;
+//    const float delta_t = inputs->delta_t;
+//    double      t_total = inputs->t_charge + inputs->t_discharge + 2*inputs->t_idle;
+//    double      alpha_f = inputs->k_f / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
+//    double      alpha_s = inputs->k_s / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
+//    double      h_v_f   = inputs->h_v / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
+//    double      h_v_s   = inputs->h_v / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
 
 
 
