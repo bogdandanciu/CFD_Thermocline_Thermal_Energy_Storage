@@ -11,11 +11,22 @@ int main()
     //Write simulation data
   //  write_data(inputs.N, inputs.Ti);
     
-    cout << "Test MMS function" << endl; 
+//    cout << "Test MMS function" << endl; 
+//
+//    double sol = MMS(10,4,5,0);
+//
+//    cout << "The solution is: " << sol << endl;
+    
+    //Linear solver test 
+    double A[2][2] = {{234,24},{2,353}};
+    double b[2][1] = {{25453},{3425}};
+    double x[2]    = {};
 
-    double sol = MMS(10,4,5,0);
+    //Solve system
+    luDecomposition(A,b,x);
+    cout << "This is a linear sovler" << endl;
+    cout << "x1 " << x[0] << " and " << "x2 " << x[1];
 
-    cout << "The solution is: " << sol << endl;
 
 	return 0;
 }

@@ -23,6 +23,8 @@ using namespace std;
 
 void read_inputs(variables* inputs)
 {
+
+
     cout << "Please input the diameter of the storage: ";
     cin  >> inputs->D;
     cout << "Please input the height of the storage: ";
