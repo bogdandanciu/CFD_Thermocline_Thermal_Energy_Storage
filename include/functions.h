@@ -27,6 +27,7 @@ typedef struct variables
     double u_d;         //idle speed
 
     double T_bcl;
+    double T_bcr;
 
     double k_f;
     double k_s;
@@ -34,9 +35,9 @@ typedef struct variables
     double delta_t;
     double Cp_f;
     double C_s;
-    double h_v;
     double rho_f;
-    double rho_S; 
+    double rho_s; 
+    double h_v;
 
 }variables;
 

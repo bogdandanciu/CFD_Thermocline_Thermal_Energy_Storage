@@ -21,29 +21,57 @@ using namespace std;
 //
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 
-void read_inputs(variables* inputs)
+void read_inputs(variables* inputs, int choice)
 {
+    
+    //if choice == 0 the defaults values are read 
+    if (choice == 0)
+    {
+        inputs->H           = 5.963810;
+        inputs->D           = 8.0;
+        inputs->t_charge    = 21600.0;
+        inputs->t_discharge = 21600.0;
+        inputs->t_idle      = 21600.0;
+        inputs->Ti          = 293;
+        inputs->T_bcl       = 873;
+        inputs->T_bcr       = 293;
+        inputs->epsilon     = 0.4;
+        inputs->u_f         = 0.000271;
+        inputs->rho_f       = 1835.6;
+        inputs->Cp_f        = 1511.8;
+        inputs->k_f         = 0.52;
+        inputs->rho_s       = 2600;
+        inputs->C_s         = 900;
+        inputs->k_s         = 2;
+        inputs->h_v         = 448.587788;
+    }
+    //if choice == 1 the values are manually inputed by the user  
+    else if (choice == 1)
+    {    
+        cout << "Please input the diameter of the storage: ";
+        cin  >> inputs->D;
+        cout << "Please input the height of the storage: ";
+        cin  >> inputs->H;
+        cout << "Please input the number of cells: ";
+        cin  >> inputs->N;
+        cout << "Please input the initial temperature: "; 
+        cin  >> inputs->Ti; 
+    
+        cout << "Please enter the duration of the charge state: ";
+        cin  >> inputs->t_charge;
+        cout << "Please enter the duration of the discharge state: ";
+        cin  >> inputs->t_discharge;
+        cout << "Please enter the duration of the idle state: ";
+        cin  >> inputs->t_idle;
+        cout << "Please enter the number of cycles";
+        cin  >> inputs->n_cycles;
+        cout << "Please enter the number of time steps";
+        cin  >> inputs->n_timeSteps;
+    
+        cout << "Please enter the fluid velocity" << endl;
+        cin  >> inputs->u_f;
+    }
 
-
-    cout << "Please input the diameter of the storage: ";
-    cin  >> inputs->D;
-    cout << "Please input the height of the storage: ";
-    cin  >> inputs->H;
-    cout << "Please input the number of cells: ";
-    cin  >> inputs->N;
-    cout << "Please input the initial temperature: "; 
-    cin  >> inputs->Ti; 
-
-    cout << "Please enter the duration of the charge state: ";
-    cin  >> inputs->t_charge;
-    cout << "Please enter the duration of the discharge state: ";
-    cin  >> inputs->t_discharge;
-    cout << "Please enter the duration of the idle state: ";
-    cin  >> inputs->t_idle;
-    cout << "Please enter the number of cycles";
-    cin  >> inputs->n_cycles;
-    cout << "Please enter the number of time steps";
-    cin  >> inputs->n_timeSteps;
 }
 
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
