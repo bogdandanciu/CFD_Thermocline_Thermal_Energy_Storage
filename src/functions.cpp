@@ -314,16 +314,40 @@ double MMS(int n, double x, double L, int state)
 //*********Solver
 void solver(variables *inputs)
 {
-//    int         state;
-//    double      h       = inputs->H/inputs->N;
-//    const float delta_t = inputs->delta_t;
-//    double      t_total = inputs->t_charge + inputs->t_discharge + 2*inputs->t_idle;
-//    double      alpha_f = inputs->k_f / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
-//    double      alpha_s = inputs->k_s / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
-//    double      h_v_f   = inputs->h_v / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
-//    double      h_v_s   = inputs->h_v / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
+    cout << "START OF THE SIMULATION" << endl; 
 
+    int         state;
+    double      h       = inputs->H/inputs->N; //grid spacing 
 
+    const float delta_t = inputs->delta_t;
+    double      t_total = inputs->t_charge + inputs->t_discharge + 2*inputs->t_idle;
+    double      alpha_f = inputs->k_f / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
+    double      alpha_s = inputs->k_s / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
+    double      h_v_f   = inputs->h_v / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
+    double      h_v_s   = inputs->h_v / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
+    double      Pe      = (inputs->u_f * inputs->H)/alpha_f;
+
+    int         time_step;
+    int         cycle = 0;
+
+    //Initialize the temperature domain 
+    //Allocate memory 
+    double* T_old[3];
+    T_old = calloc(inputs->N, sizeof(*T_old));
+    if (T_old == NULL)
+    {
+        cout << "Memory allocation failed! Aborting simulation!" << endl;
+        exit(EXIT_FAILURE);
+    }
+    //Finish memory allocation 
+
+    for (int i = 0; i < inputs->N; i++)
+    {
+        T_old[i][0] = 1;
+        T_old[i][1] = inputs->Ti;
+        T_old[i][2] = inputs->Ti;
+
+    }
 
 }
 
