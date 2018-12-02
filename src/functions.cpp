@@ -104,7 +104,7 @@ void write_data(const int N, double Ti)
         }
         simFile.close();
     }
-    else cout << "Unable to open file" << endl; 
+    else cout << "Unable to open file\n"; 
 
 }
 
@@ -127,13 +127,14 @@ void write_data(const int N, double Ti)
 //
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 
-void write_state(double t_charge, double t_discharge, double t_idle, const int n_cycles, const int n_timeSteps)
+void write_state(int state, int time_step, float delta_t)
 {
-//    ofstrean stateFile("stateData.dat");
-//    if (stateFile.is_open())
-//    {
-//        stateFile 
-//    }
+    ofstream stateFile("State_data.dat");
+    if (stateFile.is_open())
+    {
+        cout << time_step*delta_t << state << endl;
+    }
+    else cout << "UNABLE TO WRITE DATA IN FILE \n";
 }
 
 
@@ -144,7 +145,7 @@ void charging_equation(variables *inputs,
                        double alpha_f, double alpha_s, 
                        double delta_t, 
                        double h, 
-                       double T_old[][3], double T_new[][3])
+                       double **T_old, double **T_new)
 {
     //Boundary condition on the left 
     T_new[0][0] = h; //grid spacing 
@@ -175,7 +176,7 @@ void idle_equation(variables *inputs,
                    double alpha_f, double alpha_s, 
                    double delta_t, 
                    double h, 
-                   double T_old[][3], double T_new[][3])
+                   double **T_old, double **T_new)
 {
     //Boundary condition on the left 
     T_new[0][0] = h;
@@ -203,7 +204,7 @@ void discharge_equation(variables *inputs,
                         double alpha_f, double alpha_s, 
                         double delta_t, 
                         double h, 
-                        double T_old[][3], double T_new[][3])
+                        double **T_old, double **T_new)
 {
     //Fluid velocity at discharge is the negative of the velocity at charge 
     double u_d = -1 * inputs->u_f;
@@ -312,7 +313,7 @@ double MMS(int n, double x, double L, int state)
 
 
 //*********Solver
-void solver(variables *inputs)
+int solver(variables *inputs)
 {
     cout << "START OF THE SIMULATION" << endl; 
 
@@ -330,16 +331,31 @@ void solver(variables *inputs)
     int         time_step;
     int         cycle = 0;
 
+
+    int save_file = 1; 
+
     //Initialize the temperature domain 
     //Allocate memory 
-    double* T_old[3];
-    T_old = calloc(inputs->N, sizeof(*T_old));
-    if (T_old == NULL)
-    {
-        cout << "Memory allocation failed! Aborting simulation!" << endl;
-        exit(EXIT_FAILURE);
-    }
+//    double (*arr)[3];
+//    arr = calloc(inputs->N, sizeof(*arr));
+//    double (*T_old)[3] = arr; 
+//    if (T_old == NULL)
+//    {
+//        cout << "Memory allocation failed! Aborting simulation!" << endl;
+//        exit(EXIT_FAILURE);
+//    }
     //Finish memory allocation 
+//    T_old = new (nothrow) double[inputs->N][3];
+//    assert(T_old != NULL);
+
+    //Initialize the temperature domain 
+//    double T_old[inputs->N][3];
+
+    //Initialize the temperature domain 
+    double** T_old = new double*[inputs->N];
+    for (int i = 0; i < inputs->N; i++)
+        T_old[i] = new double[3];
+
 
     for (int i = 0; i < inputs->N; i++)
     {
@@ -349,5 +365,97 @@ void solver(variables *inputs)
 
     }
 
-}
+    double max_error = 1.0;
 
+    while (cycle < inputs->n_cycles)  //Compute 
+    {
+        time_step = 0;
+        for (double simulation_time = 0; simulation_time <= t_total; simulation_time += delta_t)
+        {
+            //Intialize new temperature 
+            double** T_new = new double*[inputs->N];
+            for (int i = 0; i < inputs->N; i++)
+                T_new[i]  = new double[3];
+
+            //Charging phase 
+            if (simulation_time <= inputs->t_charge) 
+            {
+                state = 1;
+                if (time_step%save_file == 0)
+                {
+                    cout << "THERMOCLINE IS CHARGING!\n";
+                    write_state(state, time_step, delta_t);
+                }
+                charging_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);  
+            }
+            //Idle Phase
+            else if (simulation_time > inputs->t_charge && simulation_time <= (inputs->t_charge + inputs->t_idle)) 
+            {
+                state = 0; 
+                if (time_step%save_file == 0)
+                {
+                    cout << "THERMOCLINE IS IDLING! \n"; 
+                    write_state(state, time_step, delta_t);
+                }   
+                idle_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);
+            }
+            //Discharging phase
+            else if (simulation_time > (inputs->t_charge + inputs->t_idle) && simulation_time <= (inputs->t_charge + inputs->t_idle + inputs->t_discharge))
+            {
+                state = 2;
+                if (time_step%save_file == 0)
+                {
+                    cout << "THERMOCLINE IS DISCHARGING \n"; 
+                    write_state(state, time_step, delta_t);
+                }
+                discharge_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);
+            }
+
+
+            //Solve the linear system 
+            double A[2][2] = {{ 1 + (h_v_f*delta_t), (-1)*h_v_f*delta_t}, { (-1)*h_v_s*delta_t, 1 + h_v_s*delta_t}};
+            for (int i = 0; i < inputs->N; i++)
+            {
+                double x[2] = {};
+                double b[2][1] =  {{T_new[i][2]}, {T_new[i][1]}};
+                luDecomposition(A,b,x);
+                T_new[i][2] = x[0];
+                T_new[i][1] = x[1];
+            }
+
+            //Error per iteration 
+            double error_i;
+            max_error = 0.0000;
+            for (int i = 1; i < inputs->N; i++)
+            {
+                error_i = abs(T_new[i][2] - T_old[i][2]);
+                if (error_i > max_error)
+                    max_error = error_i;
+            }
+            
+            //**Copy T_new to T_old
+            //Free Memory for T_old 
+            for (int i = 0; i < inputs->N; i++)
+                delete [] T_old[i];
+            delete [] T_old;
+            //Initialize empty T_old
+            double** T_old = new double*[inputs->N];
+            for (int i = 0; i < inputs->N; i++)
+                T_old[i] = new double[3];
+            //Copy from T_new to T_old 
+            memcpy(T_old,T_new, (inputs->N) * sizeof(**T_new));
+            //Free T_new 
+            for (int i = 0; i < inputs->N; i++)
+                delete [] T_new[i];
+            delete [] T_new;
+
+
+            time_step++;
+
+        }
+
+        cycle++;
+    }
+
+    return 0;
+}

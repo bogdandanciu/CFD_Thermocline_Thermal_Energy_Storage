@@ -1,7 +1,9 @@
 #include <iostream>
 #include <fstream>
-#include <string>
+#include <cstring>
+//#include <string>
 #include <math.h>
+#include <cassert>
 
 #define PI 3.14159265358979323846
 
@@ -12,7 +14,7 @@ typedef struct variables
 {
     double H;           // height
     double D;           // diameter
-    int    N;           // number of cells 
+    int N;              // number of cells 
     double Ti;          // initial temperature 
     double Tf;          // final temperature 
 
@@ -32,7 +34,7 @@ typedef struct variables
     double k_f;
     double k_s;
     double epsilon;
-    double delta_t;
+    float  delta_t;
     double Cp_f;
     double C_s;
     double rho_f;
@@ -49,16 +51,16 @@ void read_inputs(variables* inputs);
 void write_data(const int N, double Ti);
 
 //Write state data
-void write_state(double t_charge, double t_discharge, double t_idle, const int n_cycles, const int n_timeSteps);
+void write_state(int state, int time_step, float delta_t);
 
 //Charging Equations
-void charging_equation(variables* inputs, double alpha_f, double alpha_s, double delta_t, double h, double T_old[][3], double T_new[][3]);
+void charging_equation(variables* inputs, double alpha_f, double alpha_s, double delta_t, double h, double **T_old, double **T_new);
 
 //Idle Equation 
-void idle_equation(variables* inputs, double alpha_f, double alpha_s, double delta_t, double h, double T_old[][3], double T_new[][3]);
+void idle_equation(variables* inputs, double alpha_f, double alpha_s, double delta_t, double h, double **T_old, double **T_new);
 
 //Discharge Equation 
-void discharge_equation(variables* inputs, double alpha_f, double alpha_s, double delta_t, double h, double T_old[][3], double T_new[][3]);
+void discharge_equation(variables* inputs, double alpha_f, double alpha_s, double delta_t, double h, double **T_old, double **T_new);
 
 //LU decomposition 
 void luDecomposition(double A[][2], double b[][1], double x[2]);
@@ -67,7 +69,7 @@ void luDecomposition(double A[][2], double b[][1], double x[2]);
 double MMS(int n, double x, double L, int state);
 
 //Solver    
-void solver(variables* inputs);
+int solver(variables* inputs);
 
 
 
