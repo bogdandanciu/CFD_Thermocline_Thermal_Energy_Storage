@@ -12,9 +12,9 @@ using namespace std;
 //Structure that contains the inputs 
 typedef struct variables
 {
-    double H;           // height
+    double H;           // height of the storage unit 
     double D;           // diameter
-    int N;              // number of cells 
+    int    N;           // number of cells 
     double Ti;          // initial temperature 
     double Tf;          // final temperature 
 
@@ -24,34 +24,37 @@ typedef struct variables
     int    n_cycles;    // number of cycles 
     int    n_timeSteps; // number of tine steps per cycle 
     
-    double u_f;         //fluid speed
-    double u_s;         //solid speed
-    double u_d;         //idle speed
+    double u_f;         // fluid speed
+    double u_s;         // solid speed
+    double u_d;         // idle speed
 
-    double T_bcl;
-    double T_bcr;
+    double T_bcl;       // temperature at the left BC
+    double T_bcr;       // temperature at the right BC
 
-    double k_f;
+    double k_f;         // 
     double k_s;
-    double epsilon;
-    float  delta_t;
-    double Cp_f;
-    double C_s;
-    double rho_f;
-    double rho_s; 
-    double h_v;
-
+    double epsilon;     // porosity 
+    float  delta_t;     // time step 
+    double Cp_f;        // specific heat at constant pressure
+    double C_s;         // specific heat 
+    double rho_f;       // density of the fluid
+    double rho_s;       // density of the solid 
+    double h_v;         // volumetric heat transfer coefficient 
+    
 }variables;
 
 
 //Read and user inputs 
 void read_inputs(variables* inputs);
 
-//Write state data
+//Write data
 void write_data(const int N, double Ti);
 
 //Write state data
 void write_state(int state, int time_step, float delta_t);
+
+//Write error data
+void write_error(double err, double err_avg, float h, float Pe, int n);
 
 //Charging Equations
 void charging_equation(variables* inputs, double alpha_f, double alpha_s, double delta_t, double h, double **T_old, double **T_new);

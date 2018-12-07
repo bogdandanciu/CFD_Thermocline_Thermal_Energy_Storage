@@ -1,6 +1,6 @@
 #include "functions.h" 
 
-using namespace std; 
+//using namespace std; 
 
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 // Function Name: read_inputs 
@@ -108,6 +108,41 @@ void write_data(const int N, double Ti)
 
 }
 
+
+//%%%FUNC%%%////////////////////////////////////////////////////////////////////
+// Function Name: write_error 
+//
+// Description:   This functions reads the inputs necessary to run the 
+//                simulation.
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+// Parameters:
+//   IN     : <None>
+//   OUT    : <None>
+//   RETURN : <None>
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+// Global Variables used:
+//
+//%%%FUNC%%%////////////////////////////////////////////////////////////////////
+
+void write_error(int N, double err, double err_avg, float h, float Pe)
+{
+    ofstream errorFile("errorData.dat");
+    if (errorFile.is_open())
+    {
+        for (int i = 0; i < N; i++)
+        {
+            errorFile << h << " " << err << " " << err_avg << " " << N << " " << Pe << endl;
+        }
+        errorFile.close();
+    }
+    else cout << "UNABLE TO OPEN FILE\n"; 
+
+}
+
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 // Function Name: write_state 
 //
@@ -132,7 +167,7 @@ void write_state(int state, int time_step, float delta_t)
     ofstream stateFile("State_data.dat");
     if (stateFile.is_open())
     {
-        cout << time_step*delta_t << state << endl;
+        stateFile << time_step*delta_t << " " << state << endl;
     }
     else cout << "UNABLE TO WRITE DATA IN FILE \n";
 }
@@ -312,6 +347,12 @@ double MMS(int n, double x, double L, int state)
 }
 
 
+
+
+
+//*************************************************
+
+
 //*********Solver
 int solver(variables *inputs)
 {
@@ -432,6 +473,37 @@ int solver(variables *inputs)
                 if (error_i > max_error)
                     max_error = error_i;
             }
+
+
+            //Convergence Check 
+            double residual = 0;
+            for (int i = 0; i < inputs->N; i++)
+            {
+                residual = residual + abs(T_new[i][2] - T_old[i][2]);
+            }
+
+            double error = residual/inputs->N;
+
+            
+            //OVS error
+            if (error <= 1e-5)
+            {
+                double err = 0;
+                double err_avg = 0;
+
+                //Checking convergence for fluid 
+                int fs_state = 1;
+                
+                for (int i = 1; i < inputs->N; i++)
+                {
+                    err = err + abs(T_new[i][2] - MMS(inputs->N, i*h, inputs->H, fs_state)) / (2 + MMS(inputs->N, i*h, inputs->H, fs_state));
+                }
+
+                err_avg = err/inputs->N;
+                write_error(inputs->N, err, err_avg, h, Pe);
+            } 
+            //End of Convergene check 
+
             
             //**Copy T_new to T_old
             //Free Memory for T_old 
@@ -456,6 +528,13 @@ int solver(variables *inputs)
 
         cycle++;
     }
+
+    //Free Memory for T_old 
+    for (int i = 0; i < inputs->N; i++)
+        delete [] T_old[i];
+    delete [] T_old;
+
+    cout << "The solution convervged after " << cycle << "number of cycles"; 
 
     return 0;
 }
