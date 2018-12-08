@@ -1,6 +1,5 @@
 #include "functions.h" 
 
-//using namespace std; 
 
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 // Function Name: read_inputs 
@@ -29,9 +28,9 @@ void read_inputs(variables* inputs, int choice)
     {
         inputs->H           = 5.963810;
         inputs->D           = 8.0;
-        inputs->t_charge    = 21600.0;
-        inputs->t_discharge = 21600.0;
-        inputs->t_idle      = 21600.0;
+        inputs->t_charge    = 5000.0;
+        inputs->t_discharge = 5000.0;
+        inputs->t_idle      = 5000.0;
         inputs->Ti          = 293;
         inputs->T_bcl       = 873;
         inputs->T_bcr       = 293;
@@ -206,6 +205,8 @@ void charging_equation(variables *inputs,
 }
 
 
+
+
 //*******Idle equation 
 void idle_equation(variables *inputs, 
                    double alpha_f, double alpha_s, 
@@ -232,6 +233,8 @@ void idle_equation(variables *inputs,
     T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s*(delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
     T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]);
 }
+
+
 
 
 //*******Discharge equation 
@@ -266,6 +269,7 @@ void discharge_equation(variables *inputs,
     T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_d*(delta_t/h) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]) 
                                                       + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]); 
 }
+
 
 
 
@@ -338,15 +342,14 @@ double MMS(int n, double x, double L, int state)
         double T_sol_f = cos(k*x);
 
         return T_sol_f;
-    }else if (state == 1) //solid
+    }
+    else if (state == 1) //solid
     {
         double T_sol_s = sin(k*x);
 
         return T_sol_s;
     }
 }
-
-
 
 
 
@@ -408,7 +411,7 @@ int solver(variables *inputs)
 
     double max_error = 1.0;
 
-    while (cycle < inputs->n_cycles)  //Compute 
+    while (cycle < inputs->n_cycles)  //Main computation body  
     {
         time_step = 0;
         for (double simulation_time = 0; simulation_time <= t_total; simulation_time += delta_t)

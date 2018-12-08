@@ -18,7 +18,7 @@ clean:
 	rm *.o run_main
 
 clean_all:
-	rm *.dat
+	rm *.dat *.o run_main
 
 
 

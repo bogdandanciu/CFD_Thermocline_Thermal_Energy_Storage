@@ -9,7 +9,7 @@
 
 using namespace std; 
 
-//Structure that contains the inputs 
+//Structure that contains the variables required to run the simulation 
 typedef struct variables
 {
     double H;           // height of the storage unit 
@@ -31,12 +31,12 @@ typedef struct variables
     double T_bcl;       // temperature at the left BC
     double T_bcr;       // temperature at the right BC
 
-    double k_f;         // 
-    double k_s;
+    double k_f;         // thermal conductivity of the fluid phase 
+    double k_s;         // thermal conductivity of the solid phase 
     double epsilon;     // porosity 
     float  delta_t;     // time step 
-    double Cp_f;        // specific heat at constant pressure
-    double C_s;         // specific heat 
+    double Cp_f;        // specific heat of the fluid phase at constant pressure
+    double C_s;         // specific heat of solid phase  
     double rho_f;       // density of the fluid
     double rho_s;       // density of the solid 
     double h_v;         // volumetric heat transfer coefficient 
@@ -45,7 +45,7 @@ typedef struct variables
 
 
 //Read and user inputs 
-void read_inputs(variables* inputs);
+void read_inputs(variables* inputs, int choice);
 
 //Write data
 void write_data(const int N, double Ti);
