@@ -10,7 +10,7 @@
 using namespace std; 
 
 //Structure that contains the variables required to run the simulation 
-typedef struct variables
+typedef struct 
 {
     double H;           // height of the storage unit 
     double D;           // diameter
@@ -51,7 +51,7 @@ void read_inputs(variables* inputs, int choice);
 void write_data(const int N, double Ti);
 
 //Write state data
-void write_state(int state, int time_step, float delta_t);
+void write_state(int state, int time_step, float delta_t, ofstream &stateFile);
 
 //Write error data
 void write_error(double err, double err_avg, float h, float Pe, int n);

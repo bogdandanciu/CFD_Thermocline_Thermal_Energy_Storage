@@ -27,11 +27,9 @@ int main()
 //    cout << "This is a linear sovler" << endl;
 //    cout << "x1 " << x[0] << " and " << "x2 " << x[1];
 
-    cout << "Start of the Simulation" << endl; 
-    
     //Get required inputs to run the simulation 
     int choice;
-    cout << "Choose 0 for default values or Choose 1 to input the manually\n";
+    cout << "Choose 0 for default values or Choose 1 to input the manually: ";
     cin >> choice; 
     read_inputs(&inputs,choice); 
 

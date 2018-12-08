@@ -4,7 +4,7 @@
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 // Function Name: read_inputs 
 //
-// Description:   This functions reads the inputs necessary to run the 
+// Description:   This function reads the inputs necessary to run the 
 //                simulation.
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,9 +28,9 @@ void read_inputs(variables* inputs, int choice)
     {
         inputs->H           = 5.963810;
         inputs->D           = 8.0;
-        inputs->t_charge    = 5000.0;
-        inputs->t_discharge = 5000.0;
-        inputs->t_idle      = 5000.0;
+        inputs->t_charge    = 500.0;
+        inputs->t_discharge = 500.0;
+        inputs->t_idle      = 500.0;
         inputs->Ti          = 293;
         inputs->T_bcl       = 873;
         inputs->T_bcr       = 293;
@@ -76,7 +76,7 @@ void read_inputs(variables* inputs, int choice)
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 // Function Name: write_data 
 //
-// Description:   This functions reads the inputs necessary to run the 
+// Description:   This function reads the inputs necessary to run the 
 //                simulation.
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ void write_data(const int N, double Ti)
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 // Function Name: write_error 
 //
-// Description:   This functions reads the inputs necessary to run the 
+// Description:   This function reads the inputs necessary to run the 
 //                simulation.
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +145,7 @@ void write_error(int N, double err, double err_avg, float h, float Pe)
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 // Function Name: write_state 
 //
-// Description:   This functions reads the inputs necessary to run the 
+// Description:   This function reads the inputs necessary to run the 
 //                simulation.
 //
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,9 +161,9 @@ void write_error(int N, double err, double err_avg, float h, float Pe)
 //
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 
-void write_state(int state, int time_step, float delta_t)
+void write_state(int state, int time_step, float delta_t, ofstream &stateFile)
 {
-    ofstream stateFile("State_data.dat");
+//    ofstream stateFile("State_data.dat");
     if (stateFile.is_open())
     {
         stateFile << time_step*delta_t << " " << state << endl;
@@ -189,7 +189,7 @@ void charging_equation(variables *inputs,
 
 
     //Main body of computation 
-    for (int i = 1; i < inputs->N; i++)
+    for (int i = 1; i < inputs->N-1; i++)
     {
         T_new[i][0] = (i+1)*h;
         T_new[i][1] = T_old[i][1] + alpha_s*(delta_t/(h*h)) * (T_old[i+1][1] - 2*T_old[i][1] + T_old[i-1][1]);
@@ -221,7 +221,7 @@ void idle_equation(variables *inputs,
 
 
     //Main body of computation 
-    for (int i = 1; i < inputs->N; i++)
+    for (int i = 1; i < inputs->N-1; i++)
     {
         T_new[i][0] = (i+1)*h;
         T_new[i][1] = T_old[i][1] + alpha_s*(delta_t/(h*h)) * (T_old[i+1][1] - 2*T_old[i][1] + T_old[i-1][1]);
@@ -255,7 +255,7 @@ void discharge_equation(variables *inputs,
 
 
     //Main body of computation 
-    for (int i = 1; i < inputs->N; i++)
+    for (int i = 1; i < inputs->N-1; i++)
     {
         T_new[i][0] = (i+1)*h;
         T_new[i][1] = T_old[i][1] + alpha_s*(delta_t/(h*h)) * (T_old[i+1][1] - 2*T_old[i][1] + T_old[i-1][1]);
@@ -349,6 +349,8 @@ double MMS(int n, double x, double L, int state)
 
         return T_sol_s;
     }
+
+    return 0; 
 }
 
 
@@ -359,7 +361,20 @@ double MMS(int n, double x, double L, int state)
 //*********Solver
 int solver(variables *inputs)
 {
-    cout << "START OF THE SIMULATION" << endl; 
+
+    cout << "Plese input the number of cells: ";
+    cin >> inputs->N;
+
+    cout << "Please input the number of cycles: ";
+    cin >> inputs->n_cycles;
+    
+    cout <<"Please input the time step delta_t: "; 
+    cin >> inputs->delta_t;
+
+    //Check for stability of inputs
+    
+
+
 
     int         state;
     double      h       = inputs->H/inputs->N; //grid spacing 
@@ -377,6 +392,9 @@ int solver(variables *inputs)
 
 
     int save_file = 1; 
+
+    ofstream stateFile;
+    stateFile.open("State_data.dat");
 
     //Initialize the temperature domain 
     //Allocate memory 
@@ -400,16 +418,16 @@ int solver(variables *inputs)
     for (int i = 0; i < inputs->N; i++)
         T_old[i] = new double[3];
 
-
     for (int i = 0; i < inputs->N; i++)
     {
         T_old[i][0] = 1;
         T_old[i][1] = inputs->Ti;
         T_old[i][2] = inputs->Ti;
-
     }
 
     double max_error = 1.0;
+
+    cout << "Start of the simulation\n"; 
 
     while (cycle < inputs->n_cycles)  //Main computation body  
     {
@@ -428,7 +446,7 @@ int solver(variables *inputs)
                 if (time_step%save_file == 0)
                 {
                     cout << "THERMOCLINE IS CHARGING!\n";
-                    write_state(state, time_step, delta_t);
+                    write_state(state, time_step, delta_t, stateFile);
                 }
                 charging_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);  
             }
@@ -439,7 +457,7 @@ int solver(variables *inputs)
                 if (time_step%save_file == 0)
                 {
                     cout << "THERMOCLINE IS IDLING! \n"; 
-                    write_state(state, time_step, delta_t);
+                    write_state(state, time_step, delta_t, stateFile);
                 }   
                 idle_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);
             }
@@ -450,7 +468,7 @@ int solver(variables *inputs)
                 if (time_step%save_file == 0)
                 {
                     cout << "THERMOCLINE IS DISCHARGING \n"; 
-                    write_state(state, time_step, delta_t);
+                    write_state(state, time_step, delta_t, stateFile);
                 }
                 discharge_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);
             }
@@ -489,22 +507,22 @@ int solver(variables *inputs)
 
             
             //OVS error
-            if (error <= 1e-5)
-            {
-                double err = 0;
-                double err_avg = 0;
-
-                //Checking convergence for fluid 
-                int fs_state = 1;
-                
-                for (int i = 1; i < inputs->N; i++)
-                {
-                    err = err + abs(T_new[i][2] - MMS(inputs->N, i*h, inputs->H, fs_state)) / (2 + MMS(inputs->N, i*h, inputs->H, fs_state));
-                }
-
-                err_avg = err/inputs->N;
-                write_error(inputs->N, err, err_avg, h, Pe);
-            } 
+//            if (error <= 1e-5)
+//            {
+//                double err = 0;
+//                double err_avg = 0;
+//
+//                //Checking convergence for fluid 
+//                int fs_state = 1;
+//                
+//                for (int i = 1; i < inputs->N; i++)
+//                {
+//                    err = err + abs(T_new[i][2] - MMS(inputs->N, i*h, inputs->H, fs_state)) / (2 + MMS(inputs->N, i*h, inputs->H, fs_state));
+//                }
+//
+//                err_avg = err/inputs->N;
+//                write_error(inputs->N, err, err_avg, h, Pe);
+//            } 
             //End of Convergene check 
 
             
@@ -531,13 +549,15 @@ int solver(variables *inputs)
 
         cycle++;
     }
+    
+//    cout << "Out of the main loop\n";
 
     //Free Memory for T_old 
-    for (int i = 0; i < inputs->N; i++)
-        delete [] T_old[i];
-    delete [] T_old;
+//    for (int i = 0; i < inputs->N; i++)
+//        delete [] T_old[i];
+//    delete [] T_old;
 
-    cout << "The solution convervged after " << cycle << "number of cycles"; 
+    cout << "The solution convervged after " << cycle << " cycles"; 
 
     return 0;
 }
