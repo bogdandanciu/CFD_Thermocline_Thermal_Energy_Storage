@@ -54,7 +54,7 @@ void write_data(const int N, double Ti);
 void write_state(int state, int time_step, float delta_t, ofstream &stateFile);
 
 //Write error data
-void write_error(double err, double err_avg, float h, float Pe, int n);
+void write_error(double err, double err_avg, float h, float Pe, ofstream &errorFile);
 
 //Charging Equations
 void charging_equation(variables* inputs, double alpha_f, double alpha_s, double delta_t, double h, double **T_old, double **T_new);

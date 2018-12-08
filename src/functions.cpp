@@ -127,16 +127,12 @@ void write_data(const int N, double Ti)
 //
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 
-void write_error(int N, double err, double err_avg, float h, float Pe)
+void write_error(double err, double err_avg, float h, float Pe, ofstream &errorFile)
 {
-    ofstream errorFile("errorData.dat");
+//    ofstream errorFile("errorData.dat");
     if (errorFile.is_open())
     {
-        for (int i = 0; i < N; i++)
-        {
-            errorFile << h << " " << err << " " << err_avg << " " << N << " " << Pe << endl;
-        }
-        errorFile.close();
+        errorFile << h << " " << err << " " << err_avg << " " << Pe << endl;
     }
     else cout << "UNABLE TO OPEN FILE\n"; 
 
@@ -396,6 +392,9 @@ int solver(variables *inputs)
     ofstream stateFile;
     stateFile.open("State_data.dat");
 
+    ofstream errorFile; 
+    errorFile.open("Error_data.dat");
+
     //Initialize the temperature domain 
     //Allocate memory 
 //    double (*arr)[3];
@@ -475,15 +474,16 @@ int solver(variables *inputs)
 
 
             //Solve the linear system 
-            double A[2][2] = {{ 1 + (h_v_f*delta_t), (-1)*h_v_f*delta_t}, { (-1)*h_v_s*delta_t, 1 + h_v_s*delta_t}};
-            for (int i = 0; i < inputs->N; i++)
-            {
-                double x[2] = {};
-                double b[2][1] =  {{T_new[i][2]}, {T_new[i][1]}};
-                luDecomposition(A,b,x);
-                T_new[i][2] = x[0];
-                T_new[i][1] = x[1];
-            }
+//            double A[2][2] = {{ 1 + (h_v_f*delta_t), (-1)*h_v_f*delta_t}, { (-1)*h_v_s*delta_t, 1 + h_v_s*delta_t}};
+//            for (int i = 0; i < inputs->N; i++)
+//            {
+//                double x[2] = {};
+//                double b[2][1] =  {{T_new[i][2]}, {T_new[i][1]}};
+//                luDecomposition(A,b,x);
+//                T_new[i][2] = x[0];
+//                T_new[i][1] = x[1];
+//            }
+
 
             //Error per iteration 
             double error_i;
@@ -507,22 +507,22 @@ int solver(variables *inputs)
 
             
             //OVS error
-//            if (error <= 1e-5)
-//            {
-//                double err = 0;
-//                double err_avg = 0;
-//
-//                //Checking convergence for fluid 
-//                int fs_state = 1;
-//                
-//                for (int i = 1; i < inputs->N; i++)
-//                {
-//                    err = err + abs(T_new[i][2] - MMS(inputs->N, i*h, inputs->H, fs_state)) / (2 + MMS(inputs->N, i*h, inputs->H, fs_state));
-//                }
-//
-//                err_avg = err/inputs->N;
-//                write_error(inputs->N, err, err_avg, h, Pe);
-//            } 
+            if (error <= 1e-6)
+            {
+                double err = 0;
+                double err_avg = 0;
+
+                //Checking convergence for fluid 
+                int fs_state = 0; //0 for fluid and 1 for solid
+                
+                for (int i = 1; i < inputs->N; i++)
+                {
+                    err = err + abs(T_new[i][2] - MMS(inputs->N, i*h, inputs->H, fs_state)) / (2 + MMS(inputs->N, i*h, inputs->H, fs_state));
+                }
+
+                err_avg = err/inputs->N;
+                write_error(err, err_avg, h, Pe, errorFile);
+            } 
             //End of Convergene check 
 
             
