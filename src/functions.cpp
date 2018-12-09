@@ -26,16 +26,16 @@ void read_inputs(variables* inputs, int choice)
     //if choice == 0 the defaults values are read 
     if (choice == 0)
     {
-        inputs->H           = 5.963810;
+        inputs->H           = 4;
         inputs->D           = 8.0;
-        inputs->t_charge    = 2160.0;
-        inputs->t_discharge = 2160.0;
-        inputs->t_idle      = 2160.0;
-        inputs->Ti          = 293;
-        inputs->T_bcl       = 873;
+        inputs->t_charge    = 400.0;
+        inputs->t_discharge = 400.0;
+        inputs->t_idle      = 400.0;
+        inputs->Ti          = 288;
+        inputs->T_bcl       = 773;
         inputs->T_bcr       = 293;
         inputs->epsilon     = 0.4;
-        inputs->u_f         = 0.000271;
+        inputs->u_f         = 0.1;
         inputs->rho_f       = 1835.6;
         inputs->Cp_f        = 1511.8;
         inputs->k_f         = 0.52;
@@ -97,10 +97,11 @@ void write_temperature(double **T, int n, int time_step, float delta_t, ofstream
 //    ofstream simFile("simData.dat");
     if (tempFile.is_open())
     {
-        tempFile << "Temperature profile at time: " << time_step * delta_t << endl;
+        tempFile << "Temperature profile at time: " << 1 + time_step * delta_t << endl;
         for (int i = 0; i < n; i++)
         {    
-            tempFile << T[i][0] << " " << T[i][1] << " " << T[i][2]  << endl;
+            tempFile << fixed << setprecision(6) <<  T[i][0] << " " << T[i][1] 
+                     << " " << T[i][2]  << endl;
         }
         tempFile << endl;
     }
@@ -128,12 +129,13 @@ void write_temperature(double **T, int n, int time_step, float delta_t, ofstream
 //
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 
-void write_error(double err, double err_avg, float h, float Pe, ofstream &errorFile)
+void write_error(float h, double err, double err_avg, float Pe, int n_wave, ofstream &errorFile)
 {
 //    ofstream errorFile("errorData.dat");
     if (errorFile.is_open())
     {
-        errorFile << h << " " << err << " " << err_avg << " " << Pe << endl;
+        errorFile << fixed << setprecision (4) << h << " " << err << " " 
+                  << err_avg << " " << Pe << " " << n_wave << endl;
     }
     else cout << "UNABLE TO OPEN FILE\n"; 
 
@@ -259,7 +261,7 @@ void discharge_equation(variables *inputs,
         double l = (i+1)*h;
         T_new[i][0] = l;
         T_new[i][1] = T_old[i][1] + alpha_s*(delta_t/(h*h)) * (T_old[i+1][1] - 2*T_old[i][1] + T_old[i-1][1]);
-        T_new[i][2] = T_old[i][2] - u_d*(delta_t/h) * (T_old[i][2] - T_old[i-1][2]) 
+        T_new[i][2] = T_old[i][2] - u_d*(delta_t/h) * (T_old[i+1][2] - T_old[i][2]) 
                                   + alpha_f*(delta_t/(h*h)) * (T_old[i+1][2] - 2*T_old[i][2] + T_old[i-1][2]); 
     }
 
@@ -364,19 +366,17 @@ int solver(variables *inputs)
 
     cout << "Plese input the number of cells: ";
     cin >> inputs->N;
-
-    cout << "Please input the number of cycles: ";
-    cin >> inputs->n_cycles;
     
     cout <<"Please input the time step delta_t: "; 
     cin >> inputs->delta_t;
 
+    cout << "Please input the number of cycles: ";
+    cin >> inputs->n_cycles;
+
     //Check for stability of inputs
     
 
-
-
-    int         state;
+    int         state; //1 for charging, 0 for idling, 2 for discharging
     double      h       = inputs->H/inputs->N; //grid spacing 
     
 //    double alpha_s = 2e-7;
@@ -394,8 +394,9 @@ int solver(variables *inputs)
     int         cycle = 0;
 
 
-    int save_file = 10; 
-
+    int save_file = 10; //output files will be saved at every 10th time step 
+    
+    //Initialize output files
     ofstream stateFile;
     stateFile.open("State_data.dat");
 
@@ -404,23 +405,6 @@ int solver(variables *inputs)
 
     ofstream tempFile;
     tempFile.open("Temperature_data.dat");
-
-    //Initialize the temperature domain 
-    //Allocate memory 
-//    double (*arr)[3];
-//    arr = calloc(inputs->N, sizeof(*arr));
-//    double (*T_old)[3] = arr; 
-//    if (T_old == NULL)
-//    {
-//        cout << "Memory allocation failed! Aborting simulation!" << endl;
-//        exit(EXIT_FAILURE);
-//    }
-    //Finish memory allocation 
-//    T_old = new (nothrow) double[inputs->N][3];
-//    assert(T_old != NULL);
-
-    //Initialize the temperature domain 
-//    double T_old[inputs->N][3];
 
     //Initialize the temperature domain 
     double** T_old = new double*[inputs->N];
@@ -437,9 +421,10 @@ int solver(variables *inputs)
 
     double max_error = 1.0;
 
-    cout << "Start of the simulation\n"; 
 
-    while (cycle < inputs->n_cycles)  //Main computation body  
+    //Start of the main solver
+    cout << "Start of the simulation\n"; 
+    while (cycle < inputs->n_cycles+1)  //Main computation body  
     {
         time_step = 0;
         for (double simulation_time = 0; simulation_time <= t_total; simulation_time += delta_t)
@@ -495,15 +480,15 @@ int solver(variables *inputs)
             }
 
             //Solve the linear system 
-            double A[2][2] = {{ 1 + (h_v_f*delta_t), (-1)*h_v_f*delta_t}, { (-1)*h_v_s*delta_t, 1 + h_v_s*delta_t}};
-            for (int i = 0; i < inputs->N; i++)
-            {
-                double x[2] = {};
-                double b[2][1] =  {{T_new[i][2]}, {T_new[i][1]}};
-                luDecomposition(A,b,x);
-                T_new[i][2] = x[0];
-                T_new[i][1] = x[1];
-            }
+//            double A[2][2] = {{ 1 + (h_v_f*delta_t), (-1)*h_v_f*delta_t}, { (-1)*h_v_s*delta_t, 1 + h_v_s*delta_t}};
+//            for (int i = 0; i < inputs->N; i++)
+//            {
+//                double x[2] = {};
+//                double b[2][1] =  {{T_new[i][2]}, {T_new[i][1]}};
+//                luDecomposition(A,b,x);
+//                T_new[i][2] = x[0];
+//                T_new[i][1] = x[1];
+//            }
 
 
             //Error per iteration 
@@ -542,11 +527,12 @@ int solver(variables *inputs)
                 
                 for (int i = 1; i < inputs->N; i++)
                 {
-                    err = err + fabs(T_new[i][2] - MMS(n_wave, i*h, inputs->H, fs_state) / (MMS(n_wave, i*h, inputs->H, fs_state)));
+                    //err = err + fabs(T_new[i][2] - MMS(n_wave, i*h, inputs->H, fs_state) / (2+MMS(n_wave, i*h, inputs->H, fs_state)));
+                    err = err + fabs(T_new[i][2] - MMS(n_wave, i*h, inputs->H, fs_state));
                 }
 
                 err_avg = err/inputs->N;
-                write_error(err, err_avg, h, Pe, errorFile);
+                write_error(h, err, err_avg, Pe, n_wave, errorFile);
             } 
             //End of Convergene check 
 
@@ -561,7 +547,13 @@ int solver(variables *inputs)
             for (int i = 0; i < inputs->N; i++)
                 T_old[i] = new double[3];
             //Copy from T_new to T_old 
-            memcpy(T_old,T_new, (inputs->N) * sizeof(**T_new));
+//            memcpy(T_old,T_new, (inputs->N) * sizeof(**T_new));
+            for (int i = 0; i < inputs->N; i++)
+            {
+                T_old[i][0] = T_new[i][0];
+                T_old[i][1] = T_new[i][1];
+                T_old[i][2] = T_new[i][2];
+            }
             //Free T_new 
             for (int i = 0; i < inputs->N; i++)
                 delete [] T_new[i];
@@ -580,9 +572,6 @@ int solver(variables *inputs)
 
         cycle++;
     }
-    
-//    cout << "Out of the main loop\n";
-
     //Free Memory for T_old 
 //    for (int i = 0; i < inputs->N; i++)
 //        delete [] T_old[i];
