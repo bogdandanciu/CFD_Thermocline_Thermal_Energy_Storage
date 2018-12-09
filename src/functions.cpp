@@ -28,9 +28,9 @@ void read_inputs(variables* inputs, int choice)
     {
         inputs->H           = 5.963810;
         inputs->D           = 8.0;
-        inputs->t_charge    = 500.0;
-        inputs->t_discharge = 500.0;
-        inputs->t_idle      = 500.0;
+        inputs->t_charge    = 2160.0;
+        inputs->t_discharge = 2160.0;
+        inputs->t_idle      = 2160.0;
         inputs->Ti          = 293;
         inputs->T_bcl       = 873;
         inputs->T_bcr       = 293;
@@ -74,7 +74,7 @@ void read_inputs(variables* inputs, int choice)
 }
 
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
-// Function Name: write_data 
+// Function Name: write_temperature 
 //
 // Description:   This function reads the inputs necessary to run the 
 //                simulation.
@@ -92,16 +92,17 @@ void read_inputs(variables* inputs, int choice)
 //
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
 
-void write_data(const int N, double Ti)
+void write_temperature(double **T, int n, int time_step, float delta_t, ofstream &tempFile)
 {
-    ofstream simFile("simData.dat");
-    if (simFile.is_open())
+//    ofstream simFile("simData.dat");
+    if (tempFile.is_open())
     {
-        for (int i = 0; i < N; i++)
-        {
-            simFile << i << " " << Ti << endl;
+        tempFile << "Temperature profile at time: " << time_step * delta_t << endl;
+        for (int i = 0; i < n; i++)
+        {    
+            tempFile << T[i][0] << " " << T[i][1] << " " << T[i][2]  << endl;
         }
-        simFile.close();
+        tempFile << endl;
     }
     else cout << "Unable to open file\n"; 
 
@@ -187,16 +188,17 @@ void charging_equation(variables *inputs,
     //Main body of computation 
     for (int i = 1; i < inputs->N-1; i++)
     {
-        T_new[i][0] = (i+1)*h;
+        double l = (i+1)*h;
+        T_new[i][0] = l;
         T_new[i][1] = T_old[i][1] + alpha_s*(delta_t/(h*h)) * (T_old[i+1][1] - 2*T_old[i][1] + T_old[i-1][1]);
-        T_new[i][2] = T_old[i][2] - inputs->u_f*(delta_t/h) * (T_old[i+1][2] - T_old[i-1][2]) 
+        T_new[i][2] = T_old[i][2] - inputs->u_f*(delta_t/h) * (T_old[i][2] - T_old[i-1][2]) 
                                   + alpha_f*(delta_t/(h*h)) * (T_old[i+1][2] - 2*T_old[i][2] + T_old[i-1][2]); 
     }
 
     //Boundary conditions on the right 
     T_new[inputs->N - 1][0] = inputs->N*h;
     T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s*(delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
-    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_f*(delta_t/h) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]) 
+    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_f*(delta_t/h) * (T_old[inputs->N - 1][2] - T_old[inputs->N - 2][2]) 
                                                       + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]); 
 }
 
@@ -213,19 +215,20 @@ void idle_equation(variables *inputs,
     //Boundary condition on the left 
     T_new[0][0] = h;
     T_new[0][1] = T_old[0][1] + alpha_s*(delta_t/(h*h)) * (T_old[1][1] - T_old[0][1]);
-    T_new[0][2] = T_old[0][2] - alpha_f*(delta_t/(h*h)) * (T_old[1][2] - T_old[0][2]);
+    T_new[0][2] = T_old[0][2] + alpha_f*(delta_t/(h*h)) * (T_old[1][2] - T_old[0][2]);
 
 
     //Main body of computation 
     for (int i = 1; i < inputs->N-1; i++)
     {
-        T_new[i][0] = (i+1)*h;
+        double l = (i+1)*h;
+        T_new[i][0] = l;
         T_new[i][1] = T_old[i][1] + alpha_s*(delta_t/(h*h)) * (T_old[i+1][1] - 2*T_old[i][1] + T_old[i-1][1]);
         T_new[i][2] = T_old[i][2] + alpha_s*(delta_t/(h*h)) * (T_old[i+1][2] - 2*T_old[i][1] + T_old[i-1][2]);
     }
 
     //Boundary conditions on the right 
-    T_new[inputs->N - 1][0] = inputs->N*h;
+    T_new[inputs->N - 1][0] = (inputs->N)*h;
     T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s*(delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
     T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]);
 }
@@ -241,7 +244,7 @@ void discharge_equation(variables *inputs,
                         double **T_old, double **T_new)
 {
     //Fluid velocity at discharge is the negative of the velocity at charge 
-    double u_d = -1 * inputs->u_f;
+    double u_d = (-1) * inputs->u_f;
 
     //Boundary condition on the left 
     T_new[0][0] = h;
@@ -253,16 +256,17 @@ void discharge_equation(variables *inputs,
     //Main body of computation 
     for (int i = 1; i < inputs->N-1; i++)
     {
-        T_new[i][0] = (i+1)*h;
+        double l = (i+1)*h;
+        T_new[i][0] = l;
         T_new[i][1] = T_old[i][1] + alpha_s*(delta_t/(h*h)) * (T_old[i+1][1] - 2*T_old[i][1] + T_old[i-1][1]);
-        T_new[i][2] = T_old[i][2] - u_d*(delta_t/h) * (T_old[i+1][2] - T_old[i][2]) 
+        T_new[i][2] = T_old[i][2] - u_d*(delta_t/h) * (T_old[i][2] - T_old[i-1][2]) 
                                   + alpha_f*(delta_t/(h*h)) * (T_old[i+1][2] - 2*T_old[i][2] + T_old[i-1][2]); 
     }
 
     //Boundary conditions on the right 
     T_new[inputs->N - 1][0] = inputs->N*h;
     T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s*(delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
-    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - inputs->u_d*(delta_t/h) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]) 
+    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - u_d*(delta_t/h) * (inputs->T_bcr - T_old[inputs->N - 1][2]) 
                                                       + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]); 
 }
 
@@ -374,6 +378,9 @@ int solver(variables *inputs)
 
     int         state;
     double      h       = inputs->H/inputs->N; //grid spacing 
+    
+//    double alpha_s = 2e-7;
+//    double alpha_f = 9e-7;
 
     const float delta_t = inputs->delta_t;
     double      t_total = inputs->t_charge + inputs->t_discharge + 2*inputs->t_idle;
@@ -387,13 +394,16 @@ int solver(variables *inputs)
     int         cycle = 0;
 
 
-    int save_file = 1; 
+    int save_file = 10; 
 
     ofstream stateFile;
     stateFile.open("State_data.dat");
 
     ofstream errorFile; 
     errorFile.open("Error_data.dat");
+
+    ofstream tempFile;
+    tempFile.open("Temperature_data.dat");
 
     //Initialize the temperature domain 
     //Allocate memory 
@@ -419,7 +429,8 @@ int solver(variables *inputs)
 
     for (int i = 0; i < inputs->N; i++)
     {
-        T_old[i][0] = 1;
+        double l = (i+1)*h;
+        T_old[i][0] = l;
         T_old[i][1] = inputs->Ti;
         T_old[i][2] = inputs->Ti;
     }
@@ -466,23 +477,33 @@ int solver(variables *inputs)
                 state = 2;
                 if (time_step%save_file == 0)
                 {
-                    cout << "THERMOCLINE IS DISCHARGING \n"; 
+                    cout << "THERMOCLINE IS DISCHARGING! \n"; 
                     write_state(state, time_step, delta_t, stateFile);
                 }
                 discharge_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);
             }
-
+            //Idle Phase
+            else if (simulation_time > (inputs->t_charge + inputs->t_idle + inputs->t_discharge)  && simulation_time <= t_total) 
+            {
+                state = 0; 
+                if (time_step%save_file == 0)
+                {
+                    cout << "THERMOCLINE IS IDLING! \n"; 
+                    write_state(state, time_step, delta_t, stateFile);
+                }   
+                idle_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);
+            }
 
             //Solve the linear system 
-//            double A[2][2] = {{ 1 + (h_v_f*delta_t), (-1)*h_v_f*delta_t}, { (-1)*h_v_s*delta_t, 1 + h_v_s*delta_t}};
-//            for (int i = 0; i < inputs->N; i++)
-//            {
-//                double x[2] = {};
-//                double b[2][1] =  {{T_new[i][2]}, {T_new[i][1]}};
-//                luDecomposition(A,b,x);
-//                T_new[i][2] = x[0];
-//                T_new[i][1] = x[1];
-//            }
+            double A[2][2] = {{ 1 + (h_v_f*delta_t), (-1)*h_v_f*delta_t}, { (-1)*h_v_s*delta_t, 1 + h_v_s*delta_t}};
+            for (int i = 0; i < inputs->N; i++)
+            {
+                double x[2] = {};
+                double b[2][1] =  {{T_new[i][2]}, {T_new[i][1]}};
+                luDecomposition(A,b,x);
+                T_new[i][2] = x[0];
+                T_new[i][1] = x[1];
+            }
 
 
             //Error per iteration 
@@ -490,7 +511,7 @@ int solver(variables *inputs)
             max_error = 0.0000;
             for (int i = 1; i < inputs->N; i++)
             {
-                error_i = abs(T_new[i][2] - T_old[i][2]);
+                error_i = fabs(T_new[i][2] - T_old[i][2]);
                 if (error_i > max_error)
                     max_error = error_i;
             }
@@ -500,13 +521,17 @@ int solver(variables *inputs)
             double residual = 0;
             for (int i = 0; i < inputs->N; i++)
             {
-                residual = residual + abs(T_new[i][2] - T_old[i][2]);
+                residual = residual + fabs(T_new[i][2] - T_old[i][2]);
             }
 
             double error = residual/inputs->N;
 
             
             //OVS error
+
+            //number of wavelengths 
+            int n_wave = 3;
+
             if (error <= 1e-6)
             {
                 double err = 0;
@@ -517,7 +542,7 @@ int solver(variables *inputs)
                 
                 for (int i = 1; i < inputs->N; i++)
                 {
-                    err = err + abs(T_new[i][2] - MMS(inputs->N, i*h, inputs->H, fs_state)) / (2 + MMS(inputs->N, i*h, inputs->H, fs_state));
+                    err = err + fabs(T_new[i][2] - MMS(n_wave, i*h, inputs->H, fs_state) / (MMS(n_wave, i*h, inputs->H, fs_state)));
                 }
 
                 err_avg = err/inputs->N;
@@ -542,6 +567,12 @@ int solver(variables *inputs)
                 delete [] T_new[i];
             delete [] T_new;
 
+
+            //write temperature to file
+            if (time_step%save_file==0)
+            {
+                write_temperature(T_old, inputs->N, time_step, delta_t, tempFile);
+            }
 
             time_step++;
 

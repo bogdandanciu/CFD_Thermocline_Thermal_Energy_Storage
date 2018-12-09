@@ -48,7 +48,7 @@ typedef struct
 void read_inputs(variables* inputs, int choice);
 
 //Write data
-void write_data(const int N, double Ti);
+void write_temperature(double **T, int n, int time_step, float delta_t, ofstream &tempFile);
 
 //Write state data
 void write_state(int state, int time_step, float delta_t, ofstream &stateFile);
