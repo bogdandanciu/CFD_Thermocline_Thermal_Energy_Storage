@@ -26,14 +26,14 @@ void read_inputs(variables* inputs, int choice)
     //if choice == 0 the defaults values are read 
     if (choice == 0)
     {
-        inputs->H           = 4;
+        inputs->H           = 2e-3;
         inputs->D           = 8.0;
-        inputs->t_charge    = 400.0;
-        inputs->t_discharge = 400.0;
-        inputs->t_idle      = 400.0;
+        inputs->t_charge    = 1000.0;
+        inputs->t_discharge = 1000.0;
+        inputs->t_idle      = 1000.0;
         inputs->Ti          = 288;
-        inputs->T_bcl       = 773;
-        inputs->T_bcr       = 293;
+        inputs->T_bcl       = 288;
+        inputs->T_bcr       = 773;
         inputs->epsilon     = 0.4;
         inputs->u_f         = 0.1;
         inputs->rho_f       = 1835.6;
@@ -97,7 +97,7 @@ void write_temperature(double **T, int n, int time_step, float delta_t, ofstream
 //    ofstream simFile("simData.dat");
     if (tempFile.is_open())
     {
-        tempFile << "Temperature profile at time: " << 1 + time_step * delta_t << endl;
+        tempFile << "Temperature profile at time: " << time_step * delta_t << endl;
         for (int i = 0; i < n; i++)
         {    
             tempFile << fixed << setprecision(6) <<  T[i][0] << " " << T[i][1] 
@@ -280,9 +280,6 @@ void luDecomposition(double A[][2], double b[][1], double x[2])
 {
     double lower[2][2], upper[2][2];
     double z1, z2, x1, x2;
-
-//    memset(lower, 0, size(lower));
-//    memset(upper, 0, size(upper));
     
     //Decomposition into Upper and Lower matrices 
     for (int i = 0; i < 2; i++)
@@ -374,18 +371,18 @@ int solver(variables *inputs)
     cin >> inputs->n_cycles;
 
     //Check for stability of inputs
-    
+    //
 
     int         state; //1 for charging, 0 for idling, 2 for discharging
     double      h       = inputs->H/inputs->N; //grid spacing 
     
-//    double alpha_s = 2e-7;
-//    double alpha_f = 9e-7;
+    double alpha_f = 2e-7;
+    double alpha_s = 9e-7;
 
     const float delta_t = inputs->delta_t;
     double      t_total = inputs->t_charge + inputs->t_discharge + 2*inputs->t_idle;
-    double      alpha_f = inputs->k_f / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
-    double      alpha_s = inputs->k_s / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
+//    double      alpha_f = inputs->k_f / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
+//    double      alpha_s = inputs->k_s / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
     double      h_v_f   = inputs->h_v / (inputs->epsilon * inputs->rho_f * inputs->Cp_f);
     double      h_v_s   = inputs->h_v / ((1-inputs->epsilon) * inputs->rho_s * inputs->C_s);
     double      Pe      = (inputs->u_f * inputs->H)/alpha_f;
@@ -419,6 +416,11 @@ int solver(variables *inputs)
         T_old[i][2] = inputs->Ti;
     }
 
+    //Write first initial temperature
+    int time_step_init = 0; 
+    write_temperature(T_old, inputs->N, time_step_init, delta_t, tempFile);
+    write_state(1, time_step_init, delta_t, stateFile);
+
     double max_error = 1.0;
 
 
@@ -426,7 +428,7 @@ int solver(variables *inputs)
     cout << "Start of the simulation\n"; 
     while (cycle < inputs->n_cycles+1)  //Main computation body  
     {
-        time_step = 0;
+        time_step = 1;
         for (double simulation_time = 0; simulation_time <= t_total; simulation_time += delta_t)
         {
             //Intialize new temperature 
@@ -440,7 +442,7 @@ int solver(variables *inputs)
                 state = 1;
                 if (time_step%save_file == 0)
                 {
-                    cout << "THERMOCLINE IS CHARGING!\n";
+                    cout <<"Cycle " << cycle << ": THERMOCLINE IS CHARGING!\n";
                     write_state(state, time_step, delta_t, stateFile);
                 }
                 charging_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);  
@@ -451,7 +453,7 @@ int solver(variables *inputs)
                 state = 0; 
                 if (time_step%save_file == 0)
                 {
-                    cout << "THERMOCLINE IS IDLING! \n"; 
+                    cout << "Cycle " << cycle << ": THERMOCLINE IS IDLING! \n"; 
                     write_state(state, time_step, delta_t, stateFile);
                 }   
                 idle_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);
@@ -462,7 +464,7 @@ int solver(variables *inputs)
                 state = 2;
                 if (time_step%save_file == 0)
                 {
-                    cout << "THERMOCLINE IS DISCHARGING! \n"; 
+                    cout << "Cycle " << cycle  << ": THERMOCLINE IS DISCHARGING! \n"; 
                     write_state(state, time_step, delta_t, stateFile);
                 }
                 discharge_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);
@@ -473,7 +475,7 @@ int solver(variables *inputs)
                 state = 0; 
                 if (time_step%save_file == 0)
                 {
-                    cout << "THERMOCLINE IS IDLING! \n"; 
+                    cout << "Cycle " << cycle << ": THERMOCLINE IS IDLING! \n"; 
                     write_state(state, time_step, delta_t, stateFile);
                 }   
                 idle_equation(inputs, alpha_f, alpha_s, delta_t, h, T_old, T_new);
@@ -572,10 +574,6 @@ int solver(variables *inputs)
 
         cycle++;
     }
-    //Free Memory for T_old 
-//    for (int i = 0; i < inputs->N; i++)
-//        delete [] T_old[i];
-//    delete [] T_old;
 
     cout << "The solution convervged after " << cycle << " cycles"; 
 
