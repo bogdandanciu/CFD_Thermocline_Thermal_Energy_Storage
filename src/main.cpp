@@ -3,7 +3,7 @@
 int main()
 {
     //Initialize the parameters used for the simulation
-    variables inputs;
+    parameters inputs;
 
     //Get required inputs to run the simulation 
     int choice;
