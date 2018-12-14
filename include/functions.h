@@ -16,7 +16,6 @@ typedef struct
     double D;           // diameter
     int    N;           // number of cells 
     double Ti;          // initial temperature 
-    double Tf;          // final temperature 
 
     double t_charge;    // duration of charging state
     double t_discharge; // duration of discharginh state
@@ -39,6 +38,7 @@ typedef struct
     double h_v;         // volumetric heat transfer coefficient 
     
 	int save_file;       //this number dictates how often output files will be saved 
+	
 }parameters;
 
 
@@ -70,7 +70,7 @@ void discharge_equation(parameters* inputs, double alpha_f, double alpha_s, doub
 void luDecomposition(double A[][2], double b[][1], double x[2]);
 
 //Method of Manufactured solutions function 
-double MMS_func(int n, double x, double L, int state);
+double MMS_func(int n, double x, double L);
 
 //Source term of MMS
 double MMS_source(double x,double alpha_f,double alpha_s,double u, float H, int n, double h_v_f, double h_v_s, int state);

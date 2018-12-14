@@ -229,7 +229,7 @@ void write_data(double exergy, double thermal_energy, double themral_energy_max,
 // Global Variables used: <None>
 //
 //%%%FUNC%%%//////////////////////////////////////////////////////////////////// 
-double MMS_func(int n, double x, double L, int state)
+double MMS_func(int n, double x, double L)
 {
     double k = (2*PI*n)/L;
     double T_sol_f = cos(k*x);
@@ -259,13 +259,13 @@ double MMS_source(double x,double alpha_f,double alpha_s,double u, float H, int 
     double f_src, s_src;
     if (state == 1) // fluid 
 	{
-        f_src = (( 4*alpha_f*n*n*PI*PI*cos((2*PI*n*x)/H))/(H*H) ) - ((2*n*u*PI*sin((2*PI*n*x)/H))/H) + h_v_f*(MMS_func(n,x,H,1) - MMS_func(n,x,H,0));
+        f_src = (( 4*alpha_f*n*n*PI*PI*cos((2*PI*n*x)/H))/(H*H) ) - ((2*n*u*PI*sin((2*PI*n*x)/H))/H) + h_v_f*(MMS_func(n,x,H) - MMS_func(n,x,H));
 		
         return f_src;
     }
     else if (state == 0) // solid
 	{
-        s_src = (( 4*alpha_s*n*n*PI*PI*cos((2*PI*n*x)/H))/(H*H)) + h_v_s*(MMS_func(n,x,H,0) - MMS_func(n,x,H,1));
+        s_src = (( 4*alpha_s*n*n*PI*PI*cos((2*PI*n*x)/H))/(H*H)) + h_v_s*(MMS_func(n,x,H) - MMS_func(n,x,H));
 		
         return s_src;
     }
@@ -681,9 +681,9 @@ int solver(parameters *inputs)
 //                
 //                for (int i = 1; i < inputs->N; i++)
 //                {
-//                    //E1 = E1 + fabs(T_new[i][2] - MMS_func(n_wave, i*h, inputs->H, fs_state) / (2 + MMS_func(n_wave, i*h, inputs->H, fs_state)));
-//                    E1 = E1 + fabs(T_new[i][2] - MMS_func(n_wave, i*h, inputs->H, fs_state));
-//				      E2 = E2 + pow((T_new[i][2] - MMS_func(n_wave, i*h, inputs->H, fs_state),2);
+//                    //E1 = E1 + fabs(T_new[i][2] - MMS_func(n_wave, i*h, inputs->H) / (2 + MMS_func(n_wave, i*h, inputs->H)));
+//                    E1 = E1 + fabs(T_new[i][2] - MMS_func(n_wave, i*h, inputs->H));
+//				      E2 = E2 + pow((T_new[i][2] - MMS_func(n_wave, i*h, inputs->H),2);
 //                }
 //
 //                E1 = E1/inputs->N;
