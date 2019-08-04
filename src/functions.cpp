@@ -299,9 +299,9 @@ void charging_equation(parameters *inputs,
 {
     //Boundary condition on the left 
     T_new[0][0] = h; //grid spacing 
-    T_new[0][1] = T_old[0][1] + alpha_s*(delta_t/(h*h)) * (T_old[1][1] - T_old[0][1]);// + delta_t*MMS_source(h,alpha_f,alpha_s,inputs->u_f,inputs->H,n_wave,h_v_f,h_v_s,0) ;
-    T_new[0][2] = T_old[0][2] - inputs->u_f*(delta_t/h) * (T_old[0][2] - inputs->T_c) 
-                              + alpha_f*(delta_t/(h*h)) * (T_old[1][2] - T_old[0][2]);// + delta_t*MMS_source(h,alpha_f,alpha_s,inputs->u_f,inputs->H,n_wave,h_v_f,h_v_s,1);
+    T_new[0][1] = T_old[0][1] + alpha_s     * (delta_t/(h*h)) * (T_old[1][1] - T_old[0][1]);// + delta_t*MMS_source(h,alpha_f,alpha_s,inputs->u_f,inputs->H,n_wave,h_v_f,h_v_s,0) ;
+    T_new[0][2] = T_old[0][2] - inputs->u_f * (delta_t/h)     * (T_old[0][2] - inputs->T_c) 
+                              + alpha_f     * (delta_t/(h*h)) * (T_old[1][2] - T_old[0][2]);// + delta_t*MMS_source(h,alpha_f,alpha_s,inputs->u_f,inputs->H,n_wave,h_v_f,h_v_s,1);
 
 
     //Main body of computation 
@@ -396,9 +396,9 @@ void discharge_equation(parameters *inputs,
 
     //Boundary condition on the left 
     T_new[0][0] = h;
-    T_new[0][1] = T_old[0][1] + alpha_s*(delta_t/(h*h)) * (T_old[1][1] - T_old[0][1]);
-    T_new[0][2] = T_old[0][2] - u_d*(delta_t/h) * (T_old[1][2] - T_old[0][2]) 
-                              + alpha_f*(delta_t/(h*h)) * (T_old[1][2] - T_old[0][2]); 
+    T_new[0][1] = T_old[0][1] + alpha_s * (delta_t/(h*h)) * (T_old[1][1] - T_old[0][1]);
+    T_new[0][2] = T_old[0][2] - u_d     * (delta_t/h)     * (T_old[1][2] - T_old[0][2]) 
+                              + alpha_f * (delta_t/(h*h)) * (T_old[1][2] - T_old[0][2]); 
 
 
     //Main body of computation 
@@ -406,16 +406,16 @@ void discharge_equation(parameters *inputs,
     {
         double l = (i+1)*h;
         T_new[i][0] = l;
-        T_new[i][1] = T_old[i][1] + alpha_s*(delta_t/(h*h)) * (T_old[i+1][1] - 2*T_old[i][1] + T_old[i-1][1]);
-        T_new[i][2] = T_old[i][2] - u_d*(delta_t/h) * (T_old[i+1][2] - T_old[i][2]) 
-                                  + alpha_f*(delta_t/(h*h)) * (T_old[i+1][2] - 2*T_old[i][2] + T_old[i-1][2]); 
+        T_new[i][1] = T_old[i][1] + alpha_s * (delta_t/(h*h)) * (T_old[i+1][1] - 2*T_old[i][1] + T_old[i-1][1]);
+        T_new[i][2] = T_old[i][2] - u_d     * (delta_t/h)     * (T_old[i+1][2] -   T_old[i][2]) 
+                                  + alpha_f * (delta_t/(h*h)) * (T_old[i+1][2] - 2*T_old[i][2] + T_old[i-1][2]); 
     }
 
     //Boundary conditions on the right 
     T_new[inputs->N - 1][0] = inputs->N*h;
-    T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s*(delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
-    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - u_d*(delta_t/h) * (inputs->T_d - T_old[inputs->N - 1][2]) 
-                                                      + alpha_f*(delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]); 
+    T_new[inputs->N - 1][1] = T_old[inputs->N - 1][1] + alpha_s * (delta_t/(h*h)) * (T_old[inputs->N - 2][1] - T_old[inputs->N - 1][1]);
+    T_new[inputs->N - 1][2] = T_old[inputs->N - 1][2] - u_d     * (delta_t/h)     * (inputs->T_d - T_old[inputs->N - 1][2]) 
+                                                      + alpha_f * (delta_t/(h*h)) * (T_old[inputs->N - 2][2] - T_old[inputs->N - 1][2]); 
 }
 
 //%%%FUNC%%%////////////////////////////////////////////////////////////////////
