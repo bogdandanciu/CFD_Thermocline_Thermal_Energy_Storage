@@ -34,10 +34,10 @@ typedef struct
     double C_s;         // specific heat of solid phase  
     double rho_f;       // density of the fluid
     double rho_s;       // density of the solid 
-	double m_f;         // mass flow 
+    double m_f;         // mass flow 
     double h_v;         // volumetric heat transfer coefficient 
     
-	int save_file;       //this number dictates how often output files will be saved 
+    int save_file;       //this number dictates how often output files will be saved 
 	
 }parameters;
 
