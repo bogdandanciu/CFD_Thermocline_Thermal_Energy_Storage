@@ -13,7 +13,6 @@ int main()
 
     //Run main solver
     solver(&inputs);
-
-
-	return 0;
+    
+    return 0;
 }
